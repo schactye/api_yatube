@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 
-from .models import Comment, Post
+from .models import Post
 from .permissions import IsAuthorOrReadOnlyPermission
 from .serializers import CommentSerializer, PostSerializer
 
