@@ -1,36 +1,36 @@
 from django.shortcuts import get_object_or_404
+from posts.models import Group, Post
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
-from posts.models import Post
+from api.serializers import CommentSerializer, GroupSerializer, PostSerializer
+from rest_framework.permissions import IsAuthenticated
 
-from .permissions import IsAuthorOrReadOnly
-from .serializers import CommentSerializer, PostSerializer
+from .permissions import OnlyAuthorPermission
 
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    permission_classes = [IsAuthenticated, OnlyAuthorPermission]
 
-    def perform_create(self, serializer, *args, **kwargs):
+    def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+
+class GroupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    permission_classes = [IsAuthenticated, OnlyAuthorPermission]
 
-    def get_queryset(self, **kwargs):
-        post = get_object_or_404(
-            Post,
-            id=self.kwargs.get('post_id',)
-        )
-        all_comments = post.comments.all()
-        return all_comments
+    def perform_create(self, serializer):
+        get_object_or_404(Post, pk=self.kwargs.get('post_id'))
+        serializer.save(author=self.request.user)
 
-    def perform_create(self, serializer, **kwargs):
-        serializer.save(
-            author=self.request.user,
-            post_id=self.kwargs.get('post_id',)
-        )
+    def get_queryset(self):
+        post = get_object_or_404(Post, pk=self.kwargs.get('post_id'))
+        return post.comments.all()
