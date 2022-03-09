@@ -26,7 +26,7 @@ class Post(models.Model):
     )  # поле для картинки
     group = models.ForeignKey(
         Group, on_delete=models.SET_NULL,
-        related_name='posts', blank=True, null=True, 
+        related_name='posts', blank=True, null=True,
         help_text='Выберите группу'
     )
 
